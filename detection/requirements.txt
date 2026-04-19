@@ -1,0 +1,6 @@
+# RAPTOR Detection Engine — Python dependencies
+ultralytics>=8.1.0        # YOLOv8 (includes ByteTrack)
+opencv-python>=4.9.0      # Video capture + image processing
+numpy>=1.26.0             # Numerical operations
+pyzmq>=25.1.2             # ZeroMQ publisher
+Pillow>=10.2.0            # Image utilities

@@ -1,0 +1,17 @@
+{
+  "name": "raptor",
+  "version": "0.1.0",
+  "description": "RAPTOR — Real-time Autonomous PTZ Tracking and Object Recognition. Sky surveillance system with wide-field detection, PTZ camera control, and operator dashboard.",
+  "private": true,
+  "workspaces": ["backend", "frontend"],
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c cyan,magenta \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "detect": "cd detection && python detector.py",
+    "install:all": "npm install && pip install -r detection/requirements.txt"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
