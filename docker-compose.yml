@@ -1,0 +1,85 @@
+services:
+
+  # ── Backend ──────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - ./recordings:/app/recordings
+      - ./snapshots:/app/snapshots
+      - ./streams:/app/streams
+      - raptor-db:/app/data
+    environment:
+      - RAPTOR_PROFILE=${RAPTOR_PROFILE:-single}
+      - NODE_ENV=production
+    env_file:
+      - .env
+    depends_on:
+      - detector
+    restart: unless-stopped
+    networks:
+      - raptor
+
+  # ── Python Detection Engine ───────────────────────────────────────────────────
+  detector:
+    build:
+      context: .
+      dockerfile: Dockerfile.detector
+    environment:
+      - DETECT_SOURCE=${DETECT_SOURCE:-demo}
+      - ZMQ_ENDPOINT=${ZMQ_DETECTION_ENDPOINT:-tcp://0.0.0.0:5556}
+      - CAMERA_ID=${DETECT_CAMERA_ID:-1}
+    env_file:
+      - .env
+    volumes:
+      - ./detection:/app
+      - yolo-models:/root/.cache/ultralytics
+    networks:
+      - raptor
+    restart: unless-stopped
+    # GPU support (Nvidia) — comment out if not available
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # ── Frontend (Nginx) ──────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - raptor
+
+  # ── Mission Control Hub (optional — only needed for multi-station) ────────────
+  # hub:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.backend
+  #   command: node backend/mission-control/hub.js
+  #   ports:
+  #     - "${HUB_PORT:-3001}:3001"
+  #   env_file: .env
+  #   restart: unless-stopped
+  #   networks:
+  #     - raptor
+
+volumes:
+  raptor-db:
+  yolo-models:
+
+networks:
+  raptor:
+    driver: bridge
